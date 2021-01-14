@@ -1,0 +1,290 @@
+<!--
+ * @Author: 谭兴伟
+ * @Date: 2021-01-14 09:29:09
+ * @LastEditTime: 2021-01-14 21:26:46
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \coded:\3learn\exercise\贪吃蛇.html
+-->
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        /* 设置整个容器的样式 */
+        .gameWrap {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* 开启弹性布局 */
+            display: flex;
+            /* 主轴改为Y轴 */
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            width: 340px;
+            height: 400px;
+            border: 10px solid #000;
+            background-color: #b7d48a;
+            border-radius: 40px;
+        }
+
+        .gameWrap>div {
+            width: 300px;
+        }
+
+        /* 游戏区域的样式 */
+        .playArea {
+            /* 开启相对定位为蛇和食物的定位设置参考 */
+            position: relative;
+            height: 300px;
+            border: 2px solid #000;
+        }
+
+        /* 食物容器的样式 */
+        .foot {
+            /* 网格布局 */
+            display: grid;
+            grid-template-columns: 5px 5px;
+            position: absolute;
+        }
+
+        /* 食物的样式 */
+        .foot>div {
+            width: 5px;
+            height: 5px;
+            background-color: #000;
+            transform: rotateZ(45deg);
+            border-radius: 50%;
+        }
+
+        /* 蛇的样式 */
+        .snake>div {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            background-color: #000;
+            box-sizing: border-box;
+            border-radius: 2px;
+            border: 1px solid #b7d48a;
+        }
+
+        /* 计分区域的样式 */
+        .scoreArea {
+            /* 弹性布局 */
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            width: 100%;
+            height: 56px;
+            font: 700 20px Courier;
+        }
+
+        .explain {
+            position: absolute;
+            left: 50%;
+            margin-left: -100px;
+            top: 100px;
+            width: 200px;
+            font: 700 20px Courier;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="explain">
+        游戏说明<br>
+        按方向键控制蛇的行进 <br>
+        长按方向键加速
+    </div>
+    <!-- 外部容器 -->
+    <div class="gameWrap">
+        <!-- 游戏区域 -->
+        <div class="playArea">
+            <!-- 蛇 -->
+            <div class="snake">
+                <!-- 蛇头 -->
+                <div></div>
+            </div>
+            <!-- 食物 -->
+            <div class="foot">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+        <!-- 计分区域 -->
+        <div class="scoreArea">
+            <!-- 分数 -->
+            <div class="score">
+                SCORE:<span>0</span>
+            </div>
+            <!-- 等级 -->
+            <div class="level">
+                LEVEL:<span>1</span>
+            </div>
+        </div>
+    </div>
+    <script>
+        window.onload = function () {
+            //获取游戏区域
+            var playArea = document.querySelector('.playArea');
+            var snake = document.querySelector('.snake');
+            //获取蛇
+            var snakeChild = snake.getElementsByTagName('div');
+            console.log(snakeChild);
+            //获取食物
+            var foot = document.querySelector('.foot');
+            //获取积分
+            var score = document.querySelector('.score > span');
+            //获取等级
+            var level = document.querySelector('.level > span');
+            //定义一个变量存储蛇移动的计时器id
+            var moveTimer = null;
+            //定义一个蛇每一步走的距离的常量
+            const STEP = 10;
+            var scoreNum = 0;
+            score.innerHTML = scoreNum;
+            var levelNum = 1;
+            level.innerHTML = levelNum;
+
+            //定义一个随机生成食物top值和left值的函数
+            /**
+             * @description: 随机食物
+             * @param {*}
+             * @return {*}
+             */
+            function createFoot() {
+                var footTop = (Math.floor(Math.random() * 30)) * 10;
+                var footLeft = (Math.floor(Math.random() * 30)) * 10;
+                foot.style.top = footTop + 'px';
+                foot.style.left = footLeft + 'px';
+            }
+            createFoot();
+
+            //定义一个让蛇移动的函数
+            /**
+             * @description: 蛇移动
+             * @param {*} direction 根据不同的方向键传递不同的参数，下键 Y ，上键 -Y ，左键 -X ，右键 X
+             * @return {*}
+             */
+            function snakeMove(direction) {
+                clearInterval(moveTimer);
+                var offsetY = 0,
+                    offsetX = 0;
+                //判断按键按下的方向 使用自己定义的变量判断
+                // if (Math.abs(direction) == 1) {
+                //     offsetY = direction > 0 ? STEP : -STEP;
+                // } else {
+                //     offsetX = direction > 0 ? STEP : -STEP;
+                // }
+
+                //使用event.key判断
+                switch (direction) {
+                    case 'ArrowUp':
+                    case 'Up':
+                        offsetY = -STEP;
+                        break;
+                    case 'ArrowDown':
+                    case 'Down':
+                        offsetY = STEP;
+                        break;
+                    case 'ArrowLeft':
+                    case 'Left':
+                        offsetX = -STEP;
+                        break;
+                    case 'ArrowRight':
+                    case 'Right':
+                        offsetX = STEP;
+                        break;
+
+                }
+                var startX = 0,
+                    startY = 0;
+                move();
+                moveTimer = setInterval(move, 300);
+
+                function move() {
+                    // 获取蛇的起始位置
+                    startY = snakeChild[0].offsetTop;
+                    startX = snakeChild[0].offsetLeft;
+                    //定义变量保存蛇移动后的位置
+                    var endY = startY + offsetY,
+                        endX = startX + offsetX;
+                    //判断蛇是否吃到了食物
+                    if (endY == foot.offsetTop && endX == foot.offsetLeft) {
+                        //修改食物的位置
+                        createFoot();
+                        //为蛇增加身体
+                        var snakeNode = document.createElement('div');
+                        // snakeNode.style.left = startX + 'px';
+                        // snakeNode.style.top = startY + 'px';
+                        snake.appendChild(snakeNode);
+                    }
+                    // snakeChild[0].style.top = endY + 'px';
+                    // snakeChild[0].style.left = endX + 'px';
+                    // for (var i = 1; i < snakeChild.length; i++) {
+                    //     // snakeChild[i].style.left = startX - ((i - 1) * offsetX) + 'px';
+                    //     snakeChild[i].style.left = snakeChild[i-1].offsetLeft - offsetX + 'px';
+                    //     // snakeChild[i].style.top = startY - ((i - 1) * offsetY) + 'px';
+                    //     snakeChild[i].style.top = snakeChild[i-1].offsetTop - offsetY + 'px';
+                    // }
+                    //设置身体的位置
+                    for (var i = snakeChild.length-1; i > 0; i--) {
+                        snakeChild[i].style.top = snakeChild[i-1].offsetTop + 'px';
+                        snakeChild[i].style.left = snakeChild[i-1].offsetLeft + 'px';
+                    }
+                    //设置蛇头的位置
+                    snakeChild[0].style.top = endY + 'px';
+                    snakeChild[0].style.left = endX + 'px';
+                }
+            }
+            //定义键盘事件
+            document.onkeydown = function (event) {
+                if (event.keyCode >= 37 && event.keyCode <= 40) {
+                    // //40为向下，参数传1
+                    // if (event.keyCode == 40) {
+                    //     direction = 1;
+                    //     snakeMove(direction);
+                    //     //39为向右，参数传2
+                    // } else if (event.keyCode == 39) {
+                    //     direction = 2;
+                    //     snakeMove(direction)
+                    //     //38为向上，参数传-1
+                    // } else if (event.keyCode == 38) {
+                    //     direction = -1;
+                    //     snakeMove(direction);
+                    //     //37为向左，参数传-2
+                    // } else if (event.keyCode == 37) {
+                    //     direction = -2
+                    //     snakeMove(direction);
+                    // }
+
+                    snakeMove(event.key);
+                }
+            }
+
+
+        }
+    </script>
+</body>
+
+</html>
