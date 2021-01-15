@@ -1,7 +1,7 @@
 <!--
  * @Author: 谭兴伟
  * @Date: 2021-01-14 09:29:09
- * @LastEditTime: 2021-01-14 21:26:46
+ * @LastEditTime: 2021-01-15 20:14:08
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \coded:\3learn\exercise\贪吃蛇.html
@@ -229,6 +229,12 @@
                     //定义变量保存蛇移动后的位置
                     var endY = startY + offsetY,
                         endX = startX + offsetX;
+                    //判断蛇是否撞墙
+                    if(die(endX, endY)){
+                        alert('撞墙');
+                        endX = endY =  0;
+                        clearInterval(moveTimer);
+                    }
                     //判断蛇是否吃到了食物
                     if (endY == foot.offsetTop && endX == foot.offsetLeft) {
                         //修改食物的位置
@@ -248,13 +254,25 @@
                     //     snakeChild[i].style.top = snakeChild[i-1].offsetTop - offsetY + 'px';
                     // }
                     //设置身体的位置
-                    for (var i = snakeChild.length-1; i > 0; i--) {
-                        snakeChild[i].style.top = snakeChild[i-1].offsetTop + 'px';
-                        snakeChild[i].style.left = snakeChild[i-1].offsetLeft + 'px';
+                    for (var i = snakeChild.length - 1; i > 0; i--) {
+                        snakeChild[i].style.top = snakeChild[i - 1].offsetTop + 'px';
+                        snakeChild[i].style.left = snakeChild[i - 1].offsetLeft + 'px';
                     }
                     //设置蛇头的位置
                     snakeChild[0].style.top = endY + 'px';
                     snakeChild[0].style.left = endX + 'px';
+                }
+            }
+
+            /**
+             * @description: 蛇死亡逻辑
+             * @param {*} endX
+             * @param {*} endY
+             * @return {*} true:死亡
+             */
+            function die(endX, endY) {
+                if (snakeChild[0].offsetLeft < 0 || snakeChild[0].offsetTop < 0 || snakeChild[0].offsetLeft > playArea.clientWidth-STEP || snakeChild[0].offsetTop > playArea.clientHeight-STEP) {
+                    return true;
                 }
             }
             //定义键盘事件
